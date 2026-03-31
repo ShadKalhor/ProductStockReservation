@@ -1,6 +1,7 @@
 package com.example.ProductStockReservation.Entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Product {
 
+    @Id
     private UUID id;
 
     private String name;
