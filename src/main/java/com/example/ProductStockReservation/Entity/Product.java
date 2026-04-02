@@ -1,9 +1,6 @@
 package com.example.ProductStockReservation.Entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +21,7 @@ public class Product {
 
     private String name;
     private int stock;
+    @Version
     private long version;
 
 
