@@ -78,8 +78,14 @@ public class ProductService {
                                                 .get();
 
                                         product.setStock(product.getStock() - requestedProduct.quantity());
-                                        log.debug("Saving Updated Product and Returning It's Value.");
-                                        return Either.right(productRepo.save(product));
+                                        log.debug("Saving Updated Product. ProductId: {}, UpdatedStock: {}",
+                                                product.getId(),product.getStock());
+                                        Product savedProduct = productRepo.save(product);
+                                        log.info("Product Reserved Successfully. ProductId: {}, UpdatedStock: {}",
+                                                savedProduct.getId(),
+                                                savedProduct.getStock());
+
+                                        return Either.right(savedProduct);
                                     });
                         }, lockConfig)
                 )
