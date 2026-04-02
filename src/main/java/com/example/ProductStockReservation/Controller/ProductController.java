@@ -30,14 +30,14 @@ public class ProductController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Product postProduct(@RequestBody @Valid CreateProduct createProduct){
-        log.debug("Create Product Request Received. ProductName: {}, ProductStock: {}, ProductVersion: {}",
-                createProduct.name(), createProduct.stock(), createProduct.version());
+        log.debug("Create Product Request Received. ProductName: {}, ProductStock: {}",
+                createProduct.name(), createProduct.stock());
 
 
-        log.debug("Mapping CreateProduct DTO to Product Entity. ProductName: {}, ProductStock: {}, ProductVersion: {}",
-                createProduct.name(), createProduct.stock(), createProduct.version() );
+        log.debug("Mapping CreateProduct DTO to Product Entity. ProductName: {}, ProductStock: {}",
+                createProduct.name(), createProduct.stock());
 
-        Product product= new Product(null,createProduct.name(),createProduct.stock(),createProduct.version());
+        Product product= new Product(null,createProduct.name(),createProduct.stock(), 1000L);
 
         return productService.save(product).peekLeft(error -> log.error("Unexpected Error Receiving Result From Create Product Service.")).getOrElseThrow(ErrorStructureException::new);
 
