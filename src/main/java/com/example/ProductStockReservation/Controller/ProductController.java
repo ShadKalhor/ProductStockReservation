@@ -39,7 +39,7 @@ public class ProductController {
 
         Product product= new Product(null,createProduct.name(),createProduct.stock(),createProduct.version());
 
-        return productService.save(product).getOrElseThrow(ErrorStructureException::new);
+        return productService.save(product).peekLeft(error -> log.error("Unexpected Error Receiving Result From Create Product Service.")).getOrElseThrow(ErrorStructureException::new);
 
     }
     @GetMapping
@@ -65,9 +65,9 @@ public class ProductController {
         }
 
         Sort sort = ascending ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page,size, sort);
+        Pageable pageable = PageRequest.of(page,size,sort);
 
-        return productService.findAllPageable(pageable).getOrElseThrow(ErrorStructureException::new);
+        return productService.findAllPageable(pageable).peekLeft(error -> log.error("Unexpected Error Receiving Result From Get Products Service.")).getOrElseThrow(ErrorStructureException::new);
     }
     @PostMapping("/reservations")
     @ResponseStatus(HttpStatus.OK)
@@ -76,7 +76,7 @@ public class ProductController {
         log.debug("Reserve Product Request Received. ProductId: {}, ReservingQuantity: {}",
                 productReservation.id(), productReservation.quantity());
 
-        return productService.reserveProduct(productReservation).getOrElseThrow(ErrorStructureException::new);
+        return productService.reserveProduct(productReservation).peekLeft(error -> log.error("Unexpected Error Receiving Result From Reserve Product Service.")).getOrElseThrow(ErrorStructureException::new);
     }
 
 
