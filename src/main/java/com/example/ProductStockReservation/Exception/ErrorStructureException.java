@@ -6,12 +6,11 @@ import lombok.Getter;
 import static com.example.ProductStockReservation.Exception.ErrorTypeToHttpStatusMapper.httpStatus;
 
 
+@Getter
 public class ErrorStructureException extends RuntimeException {
 
-    @Getter
     private final int httpStatus;
 
-    @Getter
     private final String message;
 
     public ErrorStructureException(StructuredError structuredError){
