@@ -48,7 +48,7 @@ public class ProductService {
 
         return Try.of(() ->
                         executor.executeWithLock(() -> {
-                            log.debug("Reserve Product Started. ProductId: {}, Quantity: {}.",
+                            log.info("Reserve Product Started. ProductId: {}, Quantity: {}.",
                                     requestedProduct.id(),
                                     requestedProduct.quantity());
 
@@ -71,7 +71,7 @@ public class ProductService {
                                                     ErrorType.SERVER_ERROR
                                             ));
                                         }
-                                        log.debug("Found Product With Sufficient Stock Successfully With Id: {}", requestedProduct.id());
+                                        log.debug("Stock Check Passed. ProductId: {}", requestedProduct.id());
 
                                         Try.run(() -> Thread.sleep(10000))
                                                 .onFailure(ex -> Thread.currentThread().interrupt())
@@ -88,7 +88,8 @@ public class ProductService {
                                         return Either.right(savedProduct);
                                     });
                         }, lockConfig)
-                )
+                ).onFailure(ex -> log.error("Unexpected Error While Reserving Product. ProductId: {}, ReservingQuantity: {}",
+                        requestedProduct.id(),requestedProduct.quantity()))
                 .toEither()
                 .mapLeft(ex -> new StructuredError(
                         "Internal Server Error Reserving Product",
@@ -107,7 +108,7 @@ public class ProductService {
                     Either<StructuredError, Product> result = taskResult.getResult();
 
                     if (result == null) {
-                        log.warn("Lock Executed But Result is Null. ProductId: {}",
+                        log.error("Lock Executed But Result Was Null. ProductId: {}",
                                 requestedProduct.id());
 
                         return Either.left(new StructuredError(
