@@ -11,10 +11,6 @@ import java.util.UUID;
 @Repository
 public interface ProductRepositoryJPA extends JpaRepository<Product, UUID> {
 
-    @Override
-    @SchedulerLock(name = "product_save_lock", lockAtMostFor = "5m", lockAtLeastFor = "1m")
-    <S extends Product> S save(S product);
-
     Option<Product> findOptionById(UUID id);
 
 
