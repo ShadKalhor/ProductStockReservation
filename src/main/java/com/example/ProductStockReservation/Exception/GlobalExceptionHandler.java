@@ -20,6 +20,14 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    @ExceptionHandler(ErrorStructureException.class)
+    public ResponseEntity<ErrorResponse> handleErrorStructureException(ErrorStructureException ex){
+        final var httpStatus = ex.getHttpStatus();
+        final var errorResponse = new ErrorResponse(ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatusCode.valueOf(httpStatus));
+    }
+
+
     @ExceptionHandler(EntityNotFoundException.class)
     ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
         final var httpStatus = HttpStatus.NOT_FOUND;
