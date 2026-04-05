@@ -73,9 +73,7 @@ public class ProductService {
                                         }
                                         log.debug("Stock Check Passed. ProductId: {}", requestedProduct.id());
 
-                                        Try.run(() -> Thread.sleep(10000))
-                                                .onFailure(ex -> Thread.currentThread().interrupt())
-                                                .get();
+
 
                                         product.setStock(product.getStock() - requestedProduct.quantity());
                                         log.debug("Saving Updated Product. ProductId: {}, UpdatedStock: {}",
