@@ -21,8 +21,6 @@ public class Product {
 
     private String name;
     private int stock;
-    @Version
-    private long version;
 
 
 

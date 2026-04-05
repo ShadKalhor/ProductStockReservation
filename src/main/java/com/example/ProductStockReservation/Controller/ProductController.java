@@ -37,7 +37,7 @@ public class ProductController {
         log.debug("Mapping CreateProduct DTO to Product Entity. ProductName: {}, ProductStock: {}",
                 createProduct.name(), createProduct.stock());
 
-        Product product= new Product(null,createProduct.name(),createProduct.stock(), 1000L);
+        Product product= new Product(null,createProduct.name(),createProduct.stock());
 
         return productService.save(product).peekLeft(error -> log.error("Unexpected Error Receiving Result From Create Product Service.")).getOrElseThrow(ErrorStructureException::new);
 
