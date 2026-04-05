@@ -1,6 +1,8 @@
 package com.example.ProductStockReservation.Entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +21,10 @@ public class Product {
     @Id
     private UUID id;
 
+    @NotNull
     private String name;
+
+    @PositiveOrZero
     private int stock;
 
 
