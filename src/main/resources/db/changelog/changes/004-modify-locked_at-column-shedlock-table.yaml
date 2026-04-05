@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-modify-locked_at=column-shedlock-table
+      author: shad
+      changes:
+        - modifyDataType:
+            tableName: shedlock
+            columnName: locked_at
+            newDataType: datetime2

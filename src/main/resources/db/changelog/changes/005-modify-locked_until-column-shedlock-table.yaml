@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-modify-locked_until-column-shedlock-table
+      author: shad
+      changes:
+        - modifyDataType:
+            tableName: shedlock
+            columnName: lock_until
+            newDataType: datetime2
+            

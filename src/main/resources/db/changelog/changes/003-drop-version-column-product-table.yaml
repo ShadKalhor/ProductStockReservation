@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-drop-version-column-product-table
+      author: shad
+      changes:
+        - dropColumn:
+            tableName: products
+            columnName: version
