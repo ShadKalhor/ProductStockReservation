@@ -1,5 +1,6 @@
 package com.example.ProductStockReservation.service;
 
+import com.example.ProductStockReservation.Entity.Product;
 import com.example.ProductStockReservation.Exception.ErrorType;
 import com.example.ProductStockReservation.Repository.ProductRepositoryJPA;
 import com.example.ProductStockReservation.Service.ProductService;
@@ -18,6 +19,7 @@ import static org.assertj.vavr.api.VavrAssertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
 class ReserveProductTest {
@@ -94,5 +96,109 @@ class ReserveProductTest {
             org.assertj.core.api.Assertions.assertThat(error.message()).isEqualTo("LOCK_EXECUTED_BUT_RESULT_NULL");
             org.assertj.core.api.Assertions.assertThat(error.type()).isEqualTo(ErrorType.SERVER_ERROR);
         });
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenProductDoesNotExist() throws Throwable {
+        ProductReservation reservation = new ProductReservation(UUID.randomUUID(), 2);
+
+        @SuppressWarnings("unchecked")
+        LockingTaskExecutor.TaskResult<Object> taskResult =
+                (LockingTaskExecutor.TaskResult<Object>) mock(LockingTaskExecutor.TaskResult.class);
+
+        when(taskResult.wasExecuted()).thenReturn(true);
+
+        when(executor.executeWithLock(
+                any(LockingTaskExecutor.TaskWithResult.class),
+                any(LockConfiguration.class)
+        )).thenAnswer(invocation -> {
+            LockingTaskExecutor.TaskWithResult<?> task =
+                    invocation.getArgument(0);
+            Object result = task.call(); // EXECUTE REAL LOGIC
+
+            when(taskResult.getResult()).thenReturn(result);
+            return taskResult;
+        });
+
+        when(productRepositoryJPA.findById(any())).thenReturn(java.util.Optional.empty());
+
+        var result = productService.reserveProduct(reservation);
+
+        assertThat(result).isLeft();
+        assertThat(result).hasLeftValueSatisfying(error -> {
+            org.assertj.core.api.Assertions.assertThat(error.type())
+                    .isEqualTo(ErrorType.NOT_FOUND_ERROR);
+        });
+    }
+
+    @Test
+    void shouldReturnErrorWhenStockIsInsufficient() throws Throwable {
+        UUID productId = UUID.randomUUID();
+        ProductReservation reservation = new ProductReservation(productId, 10);
+
+        Product product = new Product(productId, "Laptop", 5);
+
+        @SuppressWarnings("unchecked")
+        LockingTaskExecutor.TaskResult<Object> taskResult =
+                (LockingTaskExecutor.TaskResult<Object>) mock(LockingTaskExecutor.TaskResult.class);
+
+        when(taskResult.wasExecuted()).thenReturn(true);
+
+        when(executor.executeWithLock(
+                any(LockingTaskExecutor.TaskWithResult.class),
+                any(LockConfiguration.class)
+        )).thenAnswer(invocation -> {
+            LockingTaskExecutor.TaskWithResult<?> task =
+                    invocation.getArgument(0);
+            Object result = task.call();
+
+            when(taskResult.getResult()).thenReturn(result);
+            return taskResult;
+        });
+
+        when(productRepositoryJPA.findById(productId)).thenReturn(java.util.Optional.of(product));
+
+        var result = productService.reserveProduct(reservation);
+
+        assertThat(result).isLeft();
+        assertThat(result).hasLeftValueSatisfying(error -> {
+            org.assertj.core.api.Assertions.assertThat(error.message())
+                    .isEqualTo("INSUFFICIENT_STOCK");
+        });
+    }
+
+    @Test
+    void shouldReserveProductSuccessfully() throws Throwable {
+        UUID productId = UUID.randomUUID();
+        ProductReservation reservation = new ProductReservation(productId, 3);
+
+        Product product = new Product(productId, "Laptop", 10);
+        Product savedProduct = new Product(productId, "Laptop", 7);
+
+        @SuppressWarnings("unchecked")
+        LockingTaskExecutor.TaskResult<Object> taskResult =
+                (LockingTaskExecutor.TaskResult<Object>) mock(LockingTaskExecutor.TaskResult.class);
+
+        when(taskResult.wasExecuted()).thenReturn(true);
+
+        when(executor.executeWithLock(
+                any(LockingTaskExecutor.TaskWithResult.class),
+                any(LockConfiguration.class)
+        )).thenAnswer(invocation -> {
+            LockingTaskExecutor.TaskWithResult<?> task =
+                    invocation.getArgument(0);
+            Object result = task.call();
+
+            when(taskResult.getResult()).thenReturn(result);
+            return taskResult;
+        });
+
+        when(productRepositoryJPA.findById(productId)).thenReturn(java.util.Optional.of(product));
+        when(productRepositoryJPA.save(any(Product.class))).thenReturn(savedProduct);
+
+        var result = productService.reserveProduct(reservation);
+
+        assertThat(result).isRight();
+        assertThat(result.get().getStock()).isEqualTo(7);
     }
 }
