@@ -44,11 +44,17 @@ dependencies {
 
 
 	implementation 'io.vavr:vavr:0.10.4'
+	testImplementation 'org.assertj:assertj-core'
+	testImplementation("org.assertj:assertj-vavr:0.4.2")
 
 
+	testImplementation 'org.springframework:spring-test'
+	testImplementation 'org.mockito:mockito-core'
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("io.rest-assured:spring-mock-mvc:3.0.0")
 	testImplementation("io.zonky.test:embedded-database-spring-test:2.3.0")
+	runtimeOnly 'com.h2database:h2' // for testing/dev
+
 
 }
 

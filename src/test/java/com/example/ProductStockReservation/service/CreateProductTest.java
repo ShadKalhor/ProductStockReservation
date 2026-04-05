@@ -10,9 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.*;
 
-import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,7 +19,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class GetProductsTest {
+class CreateProductTest {
 
     @Mock
     private ProductRepositoryJPA productRepositoryJPA;
@@ -33,35 +31,29 @@ class GetProductsTest {
     private ProductService productService;
 
     @Test
-    void shouldReturnProductsPage() {
-        Pageable pageable = PageRequest.of(0, 5, Sort.by("id").ascending());
+    void shouldCreateProduct() {
+        Product product = new Product(UUID.randomUUID(), "Laptop", 20);
 
-        Product product1 = new Product(UUID.randomUUID(), "Laptop1", 20);
-        Product product2 = new Product(UUID.randomUUID(), "Laptop2", 14);
-        Product product3 = new Product(UUID.randomUUID(), "Laptop3", 18);
+        when(productRepositoryJPA.save(product)).thenReturn(product);
 
-        Page<Product> expectedPage = new PageImpl<>(List.of(product1, product2, product3));
-
-        when(productRepositoryJPA.findAll(pageable)).thenReturn(expectedPage);
-
-        var result = productService.findAllPageable(pageable);
+        var result = productService.save(product);
 
         assertThat(result).isRight();
-        assertThat(result.get().getContent()).containsExactly(product1, product2, product3);
-        verify(productRepositoryJPA).findAll(pageable);
+        assertThat(result.get()).isEqualTo(product);
+        verify(productRepositoryJPA).save(product);
     }
 
     @Test
-    void shouldReturnServerErrorWhenFindAllFails() {
-        Pageable pageable = PageRequest.of(0, 5, Sort.by("id").ascending());
+    void shouldReturnServerErrorWhenRepositoryThrowsWhileCreatingProduct() {
+        Product product = new Product(UUID.randomUUID(), "Laptop", 20);
 
-        when(productRepositoryJPA.findAll(pageable)).thenThrow(new RuntimeException("db down"));
+        when(productRepositoryJPA.save(product)).thenThrow(new RuntimeException("db down"));
 
-        var result = productService.findAllPageable(pageable);
+        var result = productService.save(product);
 
         assertThat(result).isLeft();
         assertThat(result).hasLeftValueSatisfying(error -> {
-            org.assertj.core.api.Assertions.assertThat(error.message()).isEqualTo("Error Loading Data");
+            org.assertj.core.api.Assertions.assertThat(error.message()).isEqualTo("Issue when Saving The Product");
             org.assertj.core.api.Assertions.assertThat(error.type()).isEqualTo(ErrorType.SERVER_ERROR);
         });
     }

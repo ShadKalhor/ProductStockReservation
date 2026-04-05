@@ -1,0 +1,98 @@
+package com.example.ProductStockReservation.service;
+
+import com.example.ProductStockReservation.Exception.ErrorType;
+import com.example.ProductStockReservation.Repository.ProductRepositoryJPA;
+import com.example.ProductStockReservation.Service.ProductService;
+import com.example.ProductStockReservation.dto.ProductReservation;
+import net.javacrumbs.shedlock.core.LockConfiguration;
+import net.javacrumbs.shedlock.core.LockingTaskExecutor;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.UUID;
+
+import static org.assertj.vavr.api.VavrAssertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class ReserveProductTest {
+
+    @Mock
+    private ProductRepositoryJPA productRepositoryJPA;
+
+    @Mock
+    private LockingTaskExecutor executor;
+
+    @InjectMocks
+    private ProductService productService;
+
+    @Test
+    void shouldReturnLockNotAcquiredWhenTaskWasNotExecuted() throws Throwable {
+        ProductReservation reservation = new ProductReservation(UUID.randomUUID(), 2);
+
+        @SuppressWarnings("unchecked")
+        LockingTaskExecutor.TaskResult<Object> taskResult =
+                (LockingTaskExecutor.TaskResult<Object>) mock(LockingTaskExecutor.TaskResult.class);
+
+        when(taskResult.wasExecuted()).thenReturn(false);
+        when(executor.executeWithLock(
+                any(LockingTaskExecutor.TaskWithResult.class),
+                any(LockConfiguration.class)
+        )).thenReturn(taskResult);
+
+        var result = productService.reserveProduct(reservation);
+
+        assertThat(result).isLeft();
+        assertThat(result).hasLeftValueSatisfying(error -> {
+            org.assertj.core.api.Assertions.assertThat(error.message()).isEqualTo("LOCK_NOT_ACQUIRED");
+            org.assertj.core.api.Assertions.assertThat(error.type()).isEqualTo(ErrorType.SERVER_ERROR);
+        });
+    }
+
+    @Test
+    void shouldReturnServerErrorWhenExecutorThrowsException() throws Throwable {
+        ProductReservation reservation = new ProductReservation(UUID.randomUUID(), 2);
+
+        when(executor.executeWithLock(
+                any(LockingTaskExecutor.TaskWithResult.class),
+                any(LockConfiguration.class)
+        )).thenThrow(new RuntimeException("lock failure"));
+
+        var result = productService.reserveProduct(reservation);
+
+        assertThat(result).isLeft();
+        assertThat(result).hasLeftValueSatisfying(error -> {
+            org.assertj.core.api.Assertions.assertThat(error.message()).isEqualTo("Internal Server Error Reserving Product");
+            org.assertj.core.api.Assertions.assertThat(error.type()).isEqualTo(ErrorType.SERVER_ERROR);
+        });
+    }
+
+    @Test
+    void shouldReturnServerErrorWhenTaskExecutedButResultWasNull() throws Throwable {
+        ProductReservation reservation = new ProductReservation(UUID.randomUUID(), 2);
+
+        @SuppressWarnings("unchecked")
+        LockingTaskExecutor.TaskResult<Object> taskResult =
+                (LockingTaskExecutor.TaskResult<Object>) mock(LockingTaskExecutor.TaskResult.class);
+
+        when(taskResult.wasExecuted()).thenReturn(true);
+        when(taskResult.getResult()).thenReturn(null);
+        when(executor.executeWithLock(
+                any(LockingTaskExecutor.TaskWithResult.class),
+                any(LockConfiguration.class)
+        )).thenReturn(taskResult);
+
+        var result = productService.reserveProduct(reservation);
+
+        assertThat(result).isLeft();
+        assertThat(result).hasLeftValueSatisfying(error -> {
+            org.assertj.core.api.Assertions.assertThat(error.message()).isEqualTo("LOCK_EXECUTED_BUT_RESULT_NULL");
+            org.assertj.core.api.Assertions.assertThat(error.type()).isEqualTo(ErrorType.SERVER_ERROR);
+        });
+    }
+}
